@@ -9,7 +9,9 @@
 ## Disclaimer
 
 Original project by [@edc1591](https://twitter.com/edc1591).
+
 Code includes some fixes made by: [GioCirque](https://github.com/GioCirque/node-appletv), [casey-chow](https://github.com/casey-chow/node-appletv) and [SeppSTA](https://github.com/SeppSTA/node-appletv)
+
 The code delivered AS-IS, due to lack of time I am not planning to provide any support, feel free to do with it whatever you want. :)
 
 ## Overview
