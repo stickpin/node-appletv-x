@@ -21,7 +21,7 @@ The code delivered AS-IS, due to lack of time I am not planning to provide any s
 This version adding following funtionality:
 * Works with latest NodeJS (v12.x and newer) & Modules.
 * Fix duplicate AppleTV entries
-* Additinal buttons are added: select, tv, longtv
+* Additional buttons are added: select, tv, longtv
 * Support for tvOS 13.3 and newer
 * Various fixes
 
