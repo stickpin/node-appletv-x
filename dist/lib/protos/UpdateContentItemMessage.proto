@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+import "ProtocolMessage.proto";
+import "ContentItem.proto";
+import "PlayerPath.proto";
+
+extend ProtocolMessage {
+  optional UpdateContentItemMessage updateContentItemMessage = 60;
+}
+
+message UpdateContentItemMessage {
+  repeated ContentItem contentItems = 1;
+  optional PlayerPath playerPath = 2;
+}

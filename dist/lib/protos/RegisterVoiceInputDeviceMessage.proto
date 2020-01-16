@@ -1,7 +1,7 @@
 syntax = "proto2";
 
 import "ProtocolMessage.proto";
-import "VoiceInputDeviceDescriptor.proto";
+import "VoiceInputDeviceDescriptorMessage.proto";
 
 extend ProtocolMessage {
   optional RegisterVoiceInputDeviceMessage registerVoiceInputDeviceMessage = 33;

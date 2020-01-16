@@ -1,7 +1,7 @@
 syntax = "proto2";
 
 import "ProtocolMessage.proto";
-import "VirtualTouchDeviceDescriptor.proto";
+import "VirtualTouchDeviceDescriptorMessage.proto";
 
 extend ProtocolMessage {
   optional RegisterHIDDeviceMessage registerHIDDeviceMessage = 11;

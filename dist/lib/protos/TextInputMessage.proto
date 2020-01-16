@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+import "ProtocolMessage.proto";
+
+extend ProtocolMessage {
+  optional TextInputMessage textInputMessage = 30;
+}
+
+message TextInputMessage {
+  enum ActionType {
+    Unknown = 0;
+    Insert = 1;
+    Set = 2;
+    Delete = 3;
+    ClearText = 4; // "Clear" collides with base measage and makes mypy sad
+  }
+  optional double timestamp = 1;
+  optional string text = 2;
+  optional ActionType actionType = 3;
+}

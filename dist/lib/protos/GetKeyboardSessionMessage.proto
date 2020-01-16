@@ -7,5 +7,5 @@ extend ProtocolMessage {
 }
 
 message GetKeyboardSessionMessage {
-  
+
 }

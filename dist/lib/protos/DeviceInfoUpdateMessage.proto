@@ -3,10 +3,10 @@ syntax = "proto2";
 import "ProtocolMessage.proto";
 
 extend ProtocolMessage {
-  optional DeviceInfoMessage deviceInfoMessage = 20;
+  optional DeviceInfoUpdateMessage deviceInfoMessage = 20;
 }
 
-message DeviceInfoMessage {
+message DeviceInfoUpdateMessage {
   required string uniqueIdentifier = 1; // Example: B8D8678C-9DA9-4D29-9338-5D6B827B8063
   required string name = 2; // Example: Jean's iPhone
   optional string localizedModelName = 3; // Example: iPhone

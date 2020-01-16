@@ -1,6 +1,6 @@
 {
   "name": "node-appletv-x",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "A Node.js library for communicating with an Apple TV",
   "homepage": "https://github.com/stickpin/node-appletv-x",
   "bugs": "https://github.com/stickpin/node-appletv-x/issues",

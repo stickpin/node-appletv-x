@@ -5,7 +5,7 @@ import "NowPlayingClient.proto";
 import "NowPlayingPlayer.proto";
 
 message PlayerPath {
-    optional Origin origin = 1;
-    optional NowPlayingClient client = 2;
-    optional NowPlayingPlayer player = 3;
+  optional Origin origin = 1;
+  optional NowPlayingClient client = 2;
+  optional NowPlayingPlayer player = 3;
 }

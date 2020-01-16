@@ -7,5 +7,5 @@ extend ProtocolMessage {
 }
 
 message SetHiliteModeMessage {
-  optional bool hiliteMode = 1;
+  optional int32 hiliteMode = 1;
 }
