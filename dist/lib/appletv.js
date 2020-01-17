@@ -18,12 +18,7 @@ class AppleTV extends typed_events_1.default {
         this.pairingId = uuid_1.v4();
         this.service = service;
         this.name = service.txtRecord.Name;
-        if (service.addresses.length > 1) {
-            this.address = service.addresses[1];
-        }
-        else {
-            this.address = service.addresses[0];
-        }
+        this.address = service.host;
         this.port = service.port;
         this.uid = service.txtRecord.UniqueIdentifier;
         this.connection = new connection_1.Connection(this);
