@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const ed25519 = require("ed25519-wasm-pro");
 const curve25519 = require("curve25519-n");
 const message_1 = require("./message");

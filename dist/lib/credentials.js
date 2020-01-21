@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const encryption_1 = require("./util/encryption");
 const number_1 = require("./util/number");
 class Credentials {

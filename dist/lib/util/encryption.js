@@ -1,8 +1,9 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const sodium_1 = require("sodium");
+const chacha = require("chacha-native");
+const chacha20poly1305 = require("./chacha20poly1305");
 const crypto = require("crypto");
 const number_1 = require("./number");
+
 function computePoly1305(cipherText, AAD, nonce, key) {
     if (AAD == null) {
         AAD = Buffer.alloc(0);
@@ -15,37 +16,52 @@ function computePoly1305(cipherText, AAD, nonce, key) {
         number_1.default.UInt53toBufferLE(AAD.length),
         number_1.default.UInt53toBufferLE(cipherText.length)
     ]);
-    const polyKey = sodium_1.api.crypto_stream_chacha20(32, nonce, key);
-    const computed_hmac = sodium_1.api.crypto_onetimeauth(msg, polyKey);
-    polyKey.fill(0);
+
+    var cipherTextBuffer = Buffer.alloc(cipherText.length);
+
+    var ctx = new chacha20poly1305.Chacha20Ctx();
+    chacha20poly1305.chacha20_keysetup(ctx, key);
+    chacha20poly1305.chacha20_ivsetup(ctx, nonce);
+
+    var polyKey = Buffer.alloc(32);
+    var zeros = Buffer.alloc(64);
+    chacha20poly1305.chacha20_update(ctx, polyKey, zeros, zeros.length);
+    var written = chacha20poly1305.chacha20_update(ctx, cipherTextBuffer, cipherText, cipherText.length);
+    chacha20poly1305.chacha20_final(ctx, cipherTextBuffer.slice(written, cipherText.length));
+
+    const hmac = chacha.createHmac;
+    const hmacInstance = new hmac(polyKey);
+    const computed_hmac = hmacInstance.update(msg).digest();
+
     return computed_hmac;
+
 }
-// i'd really prefer for this to be a direct call to
-// Sodium.crypto_aead_chacha20poly1305_decrypt()
-// but unfortunately the way it constructs the message to
-// calculate the HMAC is not compatible with homekit
-// (long story short, it uses [ AAD, AAD.length, CipherText, CipherText.length ]
-// whereas homekit expects [ AAD, CipherText, AAD.length, CipherText.length ]
+
 function verifyAndDecrypt(cipherText, mac, AAD, nonce, key) {
-    const matches = sodium_1.api.crypto_verify_16(mac, computePoly1305(cipherText, AAD, nonce, key));
+    const hmac = computePoly1305(cipherText, AAD, nonce, key);
+    const matches = Buffer.compare(mac, hmac);
     if (matches === 0) {
-        return sodium_1.api
-            .crypto_stream_chacha20_xor_ic(cipherText, nonce, 1, key);
+        const cipher = new chacha.AeadLegacy(key, nonce);
+        const encryptedText = Buffer.concat([cipher.update(cipherText), cipher.final()]);
+        return encryptedText;
     }
     return null;
 }
-// See above about calling directly into libsodium.
+
 function encryptAndSeal(plainText, AAD, nonce, key) {
-    const cipherText = sodium_1.api
-        .crypto_stream_chacha20_xor_ic(plainText, nonce, 1, key);
+    const cipher = new chacha.AeadLegacy(key, nonce);
+    const cipherText = Buffer.concat([cipher.update(plainText), cipher.final()]);
     const hmac = computePoly1305(cipherText, AAD, nonce, key);
+
     return [cipherText, hmac];
 }
+
 function getPadding(buffer, blockSize) {
-    return buffer.length % blockSize === 0
-        ? Buffer.alloc(0)
-        : Buffer.alloc(blockSize - (buffer.length % blockSize));
+    return buffer.length % blockSize === 0 ?
+        Buffer.alloc(0) :
+        Buffer.alloc(blockSize - (buffer.length % blockSize));
 }
+
 function HKDF(hashAlg, salt, ikm, info, size) {
     // create the hash alg to see if it exists and get its length
     var hash = crypto.createHash(hashAlg);
@@ -73,6 +89,7 @@ function HKDF(hashAlg, salt, ikm, info, size) {
     output = Buffer.concat(buffers, size);
     return output.slice(0, size);
 }
+
 exports.default = {
     encryptAndSeal,
     verifyAndDecrypt,

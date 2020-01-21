@@ -1,7 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
 const mdns = require("mdns");
 const mdnsResolver = require("mdns-resolver");
 const appletv_1 = require("./appletv");

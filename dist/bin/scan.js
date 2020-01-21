@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const inquirer_1 = require("inquirer");
 const ora = require("ora");
 const browser_1 = require("../lib/browser");

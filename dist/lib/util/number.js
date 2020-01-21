@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 /*
  * Originally based on code from github:KhaosT/HAP-NodeJS@0c8fd88 used

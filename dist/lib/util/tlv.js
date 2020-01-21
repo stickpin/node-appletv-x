@@ -13,7 +13,6 @@
  *  * Rewrote encode() to be non-recursive; also simplified the logic
  *  * Rewrote decode()
  */
-Object.defineProperty(exports, "__esModule", { value: true });
 const Tag = {
     PairingMethod: 0x00,
     Username: 0x01,

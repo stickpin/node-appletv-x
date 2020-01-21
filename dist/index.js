@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const credentials_1 = require("./lib/credentials");
 exports.Credentials = credentials_1.Credentials;
 const appletv_1 = require("./lib/appletv");

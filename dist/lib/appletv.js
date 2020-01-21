@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const protobufjs_1 = require("protobufjs");
 const uuid_1 = require("uuid");
