@@ -1,6 +1,6 @@
 {
   "name": "node-appletv-x",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "A Node.js library for communicating with an Apple TV",
   "homepage": "https://github.com/stickpin/node-appletv-x",
   "bugs": "https://github.com/stickpin/node-appletv-x/issues",
@@ -27,7 +27,7 @@
   "dependencies": {
     "camelcase": "^5.3.1",
     "caporal": "^1.3.0",
-    "chacha-native": "^2.0.3",
+    "chacha-js": "^2.1.1",
     "curve25519-n": "^1.5.0",
     "ed25519-wasm-pro": "^1.1.1",
     "fast-srp-hap": "^1.0.1",

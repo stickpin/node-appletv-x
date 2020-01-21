@@ -1,5 +1,5 @@
 "use strict";
-const chacha = require("chacha-native");
+const chacha = require("chacha-js");
 const chacha20poly1305 = require("./chacha20poly1305");
 const crypto = require("crypto");
 const number_1 = require("./number");
