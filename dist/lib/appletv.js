@@ -10,53 +10,72 @@ const supported_command_1 = require("./supported-command");
 const typed_events_1 = require("./typed-events");
 const message_1 = require("./message");
 const number_1 = require("./util/number");
+const ipRegex = require('./util/ip-regex');
 class AppleTV extends typed_events_1.default {
     constructor(service) {
         super();
         this.service = service;
         this.pairingId = uuid_1.v4();
         this.service = service;
-        this.name = service.txtRecord.Name;
-        this.address = service.host;
+        this.name = service.name;
+        if (service.addresses.length > 1) {
+            var ipv4Priority = true;
+            var ipAddressFound = false;
+            service.addresses.forEach(ipAddress => {
+                if (!ipAddressFound) {
+                    if (ipRegex.v4({exact: true}).test(ipAddress) && ipv4Priority) {
+                        this.address = ipAddress;
+                        ipAddressFound = true;
+                    } else {
+                        if (ipRegex.v6({exact: true}).test(ipAddress) && !ipAddress.startsWith("fe80")) {
+                            this.address = ipAddress;
+                            ipAddressFound = true; 
+                        }
+                    }
+                }
+            });
+        } else {
+            this.address = service.addresses[0];
+        }
         this.port = service.port;
-        this.uid = service.txtRecord.UniqueIdentifier;
+        this.uid = service.txt.UniqueIdentifier;
         this.connection = new connection_1.Connection(this);
         let that = this;
         this.connection.on('message', (message) => {
-            that.emit('message', message);
-            if (message.type == message_1.Message.Type.SetStateMessage) {
-                if (message.payload == null) {
-                    that.emit('nowPlaying', null);
-                    return;
+                that.emit('message', message);
+                if (message.type == message_1.Message.Type.SetStateMessage) {
+                    if (message.payload == null) {
+                        that.emit('nowPlaying', null);
+                        return;
+                    }
+                    if (message.payload.nowPlayingInfo) {
+                        let info = new now_playing_info_1.NowPlayingInfo(message.payload);
+                        that.emit('nowPlaying', info);
+                    }
+                    if (message.payload.supportedCommands) {
+                        let commands = (message.payload.supportedCommands.supportedCommands || [])
+                            .map(sc => {
+                                return new supported_command_1.SupportedCommand(sc.command, sc.enabled || false, sc.canScrub || false);
+                            });
+                        that.emit('supportedCommands', commands);
+                    }
+                    if (message.payload.playbackQueue) {
+                        that.emit('playbackQueue', message.payload.playbackQueue);
+                    }
                 }
-                if (message.payload.nowPlayingInfo) {
-                    let info = new now_playing_info_1.NowPlayingInfo(message.payload);
-                    that.emit('nowPlaying', info);
-                }
-                if (message.payload.supportedCommands) {
-                    let commands = (message.payload.supportedCommands.supportedCommands || [])
-                        .map(sc => {
-                        return new supported_command_1.SupportedCommand(sc.command, sc.enabled || false, sc.canScrub || false);
-                    });
-                    that.emit('supportedCommands', commands);
-                }
-                if (message.payload.playbackQueue) {
-                    that.emit('playbackQueue', message.payload.playbackQueue);
-                }
-            }
-        })
+            })
             .on('connect', () => {
-            that.emit('connect');
-        })
+                that.emit('connect');
+            })
             .on('close', () => {
-            that.emit('close');
-        })
+                that.emit('close');
+            })
             .on('error', (error) => {
-            that.emit('error', error);
-        })
+                that.emit('error', error);
+            })
             .on('debug', (message) => {
-            that.emit('debug', message);
-        });
+                that.emit('debug', message);
+            });
         var queuePollTimer = null;
         this._on('newListener', (event, listener) => {
             if (queuePollTimer == null && (event == 'nowPlaying' || event == 'supportedCommands')) {
@@ -69,7 +88,7 @@ class AppleTV extends typed_events_1.default {
                                 width: -1,
                                 height: 368
                             }
-                        }, false).then(() => { }).catch(error => { });
+                        }, false).then(() => {}).catch(error => {});
                     }
                 }, 5000);
             }
@@ -85,18 +104,18 @@ class AppleTV extends typed_events_1.default {
         });
     }
     /**
-    * Pair with an already discovered AppleTV.
-    * @returns A promise that resolves to the AppleTV object.
-    */
+     * Pair with an already discovered AppleTV.
+     * @returns A promise that resolves to the AppleTV object.
+     */
     pair() {
         let pairing = new pairing_1.Pairing(this);
         return pairing.initiatePair();
     }
     /**
-    * Opens a connection to the AppleTV over the MRP protocol.
-    * @param credentials  The credentials object for this AppleTV
-    * @returns A promise that resolves to the AppleTV object.
-    */
+     * Opens a connection to the AppleTV over the MRP protocol.
+     * @param credentials  The credentials object for this AppleTV
+     * @returns A promise that resolves to the AppleTV object.
+     */
     openConnection(credentials) {
         let that = this;
         if (credentials) {
@@ -105,72 +124,70 @@ class AppleTV extends typed_events_1.default {
         return this.connection
             .open()
             .then(() => {
-            return that.sendIntroduction();
-        })
+                return that.sendIntroduction();
+            })
             .then(() => {
-            that.credentials = credentials;
-            if (credentials) {
-                let verifier = new verifier_1.Verifier(that);
-                return verifier.verify()
-                    .then(keys => {
-                    that.credentials.readKey = keys['readKey'];
-                    that.credentials.writeKey = keys['writeKey'];
-                    that.emit('debug', "DEBUG: Keys Read=" + that.credentials.readKey.toString('hex') + ", Write=" + that.credentials.writeKey.toString('hex'));
-                    return that.sendConnectionState();
-                });
-            }
-            else {
-                return null;
-            }
-        })
+                that.credentials = credentials;
+                if (credentials) {
+                    let verifier = new verifier_1.Verifier(that);
+                    return verifier.verify()
+                        .then(keys => {
+                            that.credentials.readKey = keys['readKey'];
+                            that.credentials.writeKey = keys['writeKey'];
+                            that.emit('debug', "DEBUG: Keys Read=" + that.credentials.readKey.toString('hex') + ", Write=" + that.credentials.writeKey.toString('hex'));
+                            return that.sendConnectionState();
+                        });
+                } else {
+                    return null;
+                }
+            })
             .then(() => {
-            if (credentials) {
-                return that.sendClientUpdatesConfig({
-                    nowPlayingUpdates: true,
-                    artworkUpdates: true,
-                    keyboardUpdates: false,
-                    volumeUpdates: false
-                });
-            }
-            else {
-                return null;
-            }
-        })
+                if (credentials) {
+                    return that.sendClientUpdatesConfig({
+                        nowPlayingUpdates: true,
+                        artworkUpdates: true,
+                        keyboardUpdates: false,
+                        volumeUpdates: false
+                    });
+                } else {
+                    return null;
+                }
+            })
             .then(() => {
-            return Promise.resolve(that);
-        });
+                return Promise.resolve(that);
+            });
     }
     /**
-    * Closes the connection to the Apple TV.
-    */
+     * Closes the connection to the Apple TV.
+     */
     closeConnection() {
         this.connection.close();
     }
     /**
-    * Send a Protobuf message to the AppleTV. This is for advanced usage only.
-    * @param definitionFilename  The Protobuf filename of the message type.
-    * @param messageType  The name of the message.
-    * @param body  The message body
-    * @param waitForResponse  Whether or not to wait for a response before resolving the Promise.
-    * @returns A promise that resolves to the response from the AppleTV.
-    */
+     * Send a Protobuf message to the AppleTV. This is for advanced usage only.
+     * @param definitionFilename  The Protobuf filename of the message type.
+     * @param messageType  The name of the message.
+     * @param body  The message body
+     * @param waitForResponse  Whether or not to wait for a response before resolving the Promise.
+     * @returns A promise that resolves to the response from the AppleTV.
+     */
     sendMessage(definitionFilename, messageType, body, waitForResponse, priority = 0) {
         return protobufjs_1.load(path.resolve(__dirname + "/protos/" + definitionFilename + ".proto"))
             .then(root => {
-            let type = root.lookupType(messageType);
-            return type.create(body);
-        })
+                let type = root.lookupType(messageType);
+                return type.create(body);
+            })
             .then(message => {
-            return this.connection
-                .send(message, waitForResponse, priority, this.credentials);
-        });
+                return this.connection
+                    .send(message, waitForResponse, priority, this.credentials);
+            });
     }
     /**
-    * Wait for a single message of a specified type.
-    * @param type  The type of the message to wait for.
-    * @param timeout  The timeout (in seconds).
-    * @returns A promise that resolves to the Message.
-    */
+     * Wait for a single message of a specified type.
+     * @param type  The type of the message to wait for.
+     * @param timeout  The timeout (in seconds).
+     * @returns A promise that resolves to the Message.
+     */
     messageOfType(type, timeout = 5) {
         let that = this;
         return new Promise((resolve, reject) => {
@@ -189,18 +206,18 @@ class AppleTV extends typed_events_1.default {
         });
     }
     /**
-    * Requests the current playback queue from the Apple TV.
-    * @param options Options to send
-    * @returns A Promise that resolves to a NewPlayingInfo object.
-    */
+     * Requests the current playback queue from the Apple TV.
+     * @param options Options to send
+     * @returns A Promise that resolves to a NewPlayingInfo object.
+     */
     requestPlaybackQueue(options) {
         return this.requestPlaybackQueueWithWait(options, true);
     }
     /**
-    * Send a key command to the AppleTV.
-    * @param key The key to press.
-    * @returns A promise that resolves to the AppleTV object after the message has been sent.
-    */
+     * Send a key command to the AppleTV.
+     * @param key The key to press.
+     * @returns A promise that resolves to the AppleTV object after the message has been sent.
+     */
     sendKeyCommand(key) {
         switch (key) {
             case AppleTV.Key.Up:
@@ -233,25 +250,27 @@ class AppleTV extends typed_events_1.default {
     }
     promiseTimeout(time) {
         return new Promise(function (resolve) {
-            setTimeout(function () { resolve(time); }, time);
+            setTimeout(function () {
+                resolve(time);
+            }, time);
         });
     }
     sendKeyPressAndRelease(usePage, usage) {
         let that = this;
         return this.sendKeyPress(usePage, usage, true)
             .then(() => {
-            return that.sendKeyPress(usePage, usage, false);
-        });
+                return that.sendKeyPress(usePage, usage, false);
+            });
     }
     sendKeyHoldAndRelease(usePage, usage) {
         let that = this;
         return this.sendKeyPress(usePage, usage, true)
             .then(() => {
-            return this.promiseTimeout(2000);
-        })
+                return this.promiseTimeout(2000);
+            })
             .then(() => {
-            return that.sendKeyPress(usePage, usage, false);
-        });
+                return that.sendKeyPress(usePage, usage, false);
+            });
     }
     sendKeyPress(usePage, usage, down) {
         let time = Buffer.from('438922cf08020000', 'hex');
@@ -271,8 +290,8 @@ class AppleTV extends typed_events_1.default {
         let that = this;
         return this.sendMessage("SendHIDEventMessage", "SendHIDEventMessage", body, false)
             .then(() => {
-            return that;
-        });
+                return that;
+            });
     }
     requestPlaybackQueueWithWait(options, waitForResponse) {
         var params = options;
@@ -303,15 +322,15 @@ class AppleTV extends typed_events_1.default {
         let that = this;
         return protobufjs_1.load(path.resolve(__dirname + "/protos/SetConnectionStateMessage.proto"))
             .then(root => {
-            let type = root.lookupType('SetConnectionStateMessage');
-            let stateEnum = type.lookupEnum('ConnectionState');
-            let message = type.create({
-                state: stateEnum.values['Connected']
+                let type = root.lookupType('SetConnectionStateMessage');
+                let stateEnum = type.lookupEnum('ConnectionState');
+                let message = type.create({
+                    state: stateEnum.values['Connected']
+                });
+                return that
+                    .connection
+                    .send(message, false, 0, that.credentials);
             });
-            return that
-                .connection
-                .send(message, false, 0, that.credentials);
-        });
     }
     sendClientUpdatesConfig(config) {
         return this.sendMessage('ClientUpdatesConfigMessage', 'ClientUpdatesConfigMessage', config, false);
@@ -323,7 +342,7 @@ class AppleTV extends typed_events_1.default {
 exports.AppleTV = AppleTV;
 (function (AppleTV) {
     /** An enumeration of key presses available.
-    */
+     */
     let Key;
     (function (Key) {
         Key[Key["Up"] = 0] = "Up";
@@ -341,47 +360,35 @@ exports.AppleTV = AppleTV;
         Key[Key["Tv"] = 12] = "Tv";
     })(Key = AppleTV.Key || (AppleTV.Key = {}));
     /** Convert a string representation of a key to the correct enum type.
-    * @param string  The string.
-    * @returns The key enum value.
-    */
+     * @param string  The string.
+     * @returns The key enum value.
+     */
     function key(string) {
         if (string == "up") {
             return AppleTV.Key.Up;
-        }
-        else if (string == "down") {
+        } else if (string == "down") {
             return AppleTV.Key.Down;
-        }
-        else if (string == "left") {
+        } else if (string == "left") {
             return AppleTV.Key.Left;
-        }
-        else if (string == "right") {
+        } else if (string == "right") {
             return AppleTV.Key.Right;
-        }
-        else if (string == "menu") {
+        } else if (string == "menu") {
             return AppleTV.Key.Menu;
-        }
-        else if (string == "play") {
+        } else if (string == "play") {
             return AppleTV.Key.Play;
-        }
-        else if (string == "pause") {
+        } else if (string == "pause") {
             return AppleTV.Key.Pause;
-        }
-        else if (string == "next") {
+        } else if (string == "next") {
             return AppleTV.Key.Next;
-        }
-        else if (string == "previous") {
+        } else if (string == "previous") {
             return AppleTV.Key.Previous;
-        }
-        else if (string == "suspend") {
+        } else if (string == "suspend") {
             return AppleTV.Key.Suspend;
-        }
-        else if (string == "select") {
+        } else if (string == "select") {
             return AppleTV.Key.Select;
-        }
-        else if (string == "longtv") {
+        } else if (string == "longtv") {
             return AppleTV.Key.LongTv;
-        }
-        else if (string == "tv") {
+        } else if (string == "tv") {
             return AppleTV.Key.Tv;
         }
     }

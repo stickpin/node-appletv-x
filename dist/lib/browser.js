@@ -1,6 +1,5 @@
 "use strict";
-const mdns = require("mdns");
-const mdnsResolver = require("mdns-resolver");
+const dnssd = require('dnssd2');
 const appletv_1 = require("./appletv");
 class Browser {
     /**
@@ -8,50 +7,24 @@ class Browser {
      * @param log  An optional function that takes a string to provide verbose logging.
      */
     constructor() {
-        let sequence = [
-            mdns.rst.DNSServiceResolve()
-        ];
+        this.browser = dnssd.Browser(dnssd.tcp('mediaremotetv'));
 
-        this.browser = mdns.createBrowser(mdns.tcp('mediaremotetv'), {
-            resolverSequence: sequence
-        });
         this.services = [];
         this.devices = [];
         let that = this;
         this.browser.on('serviceUp', function (service) {
-
-            mdnsResolver.resolve4(service.host)
-                .then(host => {
-                    service.host = host;
-                    return service;
-                })
-                .catch(e => {
-                    console.log("Failed to resolve IPv4");
-                    console.log("ERROR: " + e.message);
-                    return mdnsResolver.resolve6(service.host)
-                        .then(host => {
-                            service.host = `[${host}]`;
-                            return service;
-                        });
-                })
-                .catch(e => {
-                    console.log("Failed to resolve IPv4 and IPv6");
-                    console.log("ERROR: " + e.message);
-                })
-                .then(service => {
-                    let device = new appletv_1.AppleTV(service);
-                    if (that.uniqueIdentifier && device.uid == that.uniqueIdentifier) {
-                        that.browser.stop();
-                        that.onComplete([device]);
-                    } else {
-                        if (that.devices.find(uuid => uuid == device.uid)) {
-                            return;
-                        } else {
-                            that.devices.push(device.uid);
-                            that.services.push(device);
-                        }
-                    }
-                });
+            let device = new appletv_1.AppleTV(service);
+            if (that.uniqueIdentifier && device.uid == that.uniqueIdentifier) {
+                that.browser.stop();
+                that.onComplete([device]);
+            } else {
+                if (that.devices.find(uuid => uuid == device.uid)) {
+                    return;
+                } else {
+                    that.devices.push(device.uid);
+                    that.services.push(device);
+                }
+            }
         });
     }
     /**

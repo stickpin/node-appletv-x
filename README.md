@@ -10,24 +10,20 @@
 
 Original project by [@edc1591](https://twitter.com/edc1591).
 
-Code includes some fixes made by: [GioCirque](https://github.com/GioCirque/node-appletv), [casey-chow](https://github.com/casey-chow/node-appletv) and [SeppSTA](https://github.com/SeppSTA/node-appletv)
-
-The code delivered AS-IS, due to lack of time I am not planning to provide any support, feel free to do with it whatever you want. :)
+The code delivered AS-IS, due to lack of time I am not planning to provide any support, feel free to do with this code whatever you want. :)
 
 ## Overview
 
 `node-appletv-x` is a `node.js` implementation of the Media Remote Protocol which shipped with the 4th-generation Apple TV. This is the protocol that the Apple TV remote app uses, so this should enable the creation of an Apple TV remote app for various platforms. It can also be used in a `homebridge` plugin to connect Apple TV events to HomeKit and vice versa. `node-appletv-x` can be used as a standalone command line application, or as a module in your own node app. Keep reading for installation and usage instructions.
 
 This version adding following funtionality:
-* Works with latest NodeJS (v12.x and newer) & Modules.
+* Works with latest NodeJS (v12.x and newer)
+* Only native JS Modules.
 * Fix duplicate AppleTV entries
 * Additional buttons are added: select, tv, longtv
 * Support for tvOS 13.3 and newer
+* IPv6 support (IPv4 has a priority)
 * Various fixes
-
-## Documentation
-
-Developer documentation for `node-appletv-x` can be found /docs/ folder.
 
 ## Usage
 
@@ -35,7 +31,6 @@ Developer documentation for `node-appletv-x` can be found /docs/ folder.
 
 ```bash
 # Install
-$ sudo apt-get install libtool autoconf automake libavahi-compat-libdnssd-dev
 $ sudo npm install -g node-appletv-x --unsafe-perm
 
 # Display built-in help
@@ -129,7 +124,7 @@ return scan(uniqueIdentifier)
 
 The `uniqueIdentifier` is advertised by each Apple TV via Bonjour. Use an app like [Bonjour Browser](http://www.tildesoft.com) to find it. The identifier is also the first value in the string value of the `Credentials` object.
 
-See [homebridge-theater-mode](https://github.com/edc1591/homebridge-theater-mode) for a more practical use of this module.
+See [homebridge-appletv-onoff-switch](https://github.com/stickpin/homebridge-appletv-onoff-switch) for a more practical use of this module.
 
 ## Acknowledgments
 
@@ -139,6 +134,7 @@ See [homebridge-theater-mode](https://github.com/edc1591/homebridge-theater-mode
 * [Pierre Ståhl](https://github.com/postlund) who [implemented the protocol in Python](https://github.com/postlund/pyatv)
 * [Khaos Tian](https://github.com/KhaosT) for [reversing the HomeKit protocol](https://github.com/KhaosT/HAP-NodeJS) which also uses SRP encryption
 * [Zach Bean](https://github.com/forty2) for [implementing the HAP client spec](https://github.com/forty2/hap-client)
+* [GioCirque](https://github.com/GioCirque/node-appletv), [casey-chow](https://github.com/casey-chow/node-appletv) and [SeppSTA](https://github.com/SeppSTA/node-appletv) for various fixes.
 
 ## Meta
 

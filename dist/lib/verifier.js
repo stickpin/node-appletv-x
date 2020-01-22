@@ -1,6 +1,7 @@
 "use strict";
 const ed25519 = require("ed25519-wasm-pro");
-const curve25519 = require("curve25519-n");
+const crypto = require("crypto");
+const curve25519js = require("curve25519-js");
 const message_1 = require("./message");
 const tlv_1 = require("./util/tlv");
 const encryption_1 = require("./util/encryption");
@@ -9,9 +10,10 @@ class Verifier {
         this.device = device;
     }
     verify() {
-        var verifyPrivate = Buffer.alloc(32);
-        curve25519.makeSecretKey(verifyPrivate);
-        let verifyPublic = curve25519.derivePublicKey(verifyPrivate);
+        
+        var keyPair = curve25519js.generateKeyPair(Uint8Array.from(crypto.randomBytes(32)));
+        let verifyPrivate = Buffer.from(keyPair.private);
+        let verifyPublic = Buffer.from(keyPair.public);
         let that = this;
         let tlvData = tlv_1.default.encode(tlv_1.default.Tag.Sequence, 0x01, tlv_1.default.Tag.PublicKey, verifyPublic);
         let message = {
@@ -34,7 +36,7 @@ class Verifier {
             if (sessionPublicKey.length != 32) {
                 throw new Error(`sessionPublicKey must be 32 bytes (but was ${sessionPublicKey.length})`);
             }
-            let sharedSecret = curve25519.deriveSharedSecret(verifyPrivate, sessionPublicKey);
+            let sharedSecret = Buffer.from(curve25519js.sharedKey(Uint8Array.from(verifyPrivate), Uint8Array.from(sessionPublicKey)));
             let encryptionKey = encryption_1.default.HKDF("sha512", Buffer.from("Pair-Verify-Encrypt-Salt"), sharedSecret, Buffer.from("Pair-Verify-Encrypt-Info"), 32);
             let cipherText = encryptedData.slice(0, -16);
             let hmac = encryptedData.slice(-16);
