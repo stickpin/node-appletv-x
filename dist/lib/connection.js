@@ -154,6 +154,7 @@ class Connection extends typed_events_1.default {
                 } catch (e) {
                     that.emit('debug', "DEBUG: >>>> Error while writing to socket");
                     reject();
+                    return;
                 }
             }
             else {
@@ -165,6 +166,7 @@ class Connection extends typed_events_1.default {
                 } catch (e) {
                     that.emit('debug', "DEBUG: >>>> Error while writing to socket");
                     reject();
+                    return;
                 }
             }
             if (!waitForResponse) {
