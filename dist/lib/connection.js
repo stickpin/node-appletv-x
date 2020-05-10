@@ -149,13 +149,23 @@ class Connection extends typed_events_1.default {
                 that.emit('debug', "DEBUG: >>>> Send Protobuf=" + JSON.stringify(message.toJSON(), null, 2));
                 let messageLength = Buffer.from(varint.encode(encrypted.length));
                 let bytes = Buffer.concat([messageLength, encrypted]);
-                that.socket.write(bytes);
+                try {
+                    that.socket.write(bytes);
+                } catch (e) {
+                    that.emit('debug', "DEBUG: >>>> Error while writing to socket");
+                    reject();
+                }
             }
             else {
                 that.emit('debug', "DEBUG: >>>> Send Protobuf=" + JSON.stringify(message.toJSON(), null, 2));
                 let messageLength = Buffer.from(varint.encode(data.length));
                 let bytes = Buffer.concat([messageLength, data]);
-                that.socket.write(bytes);
+                try {
+                    that.socket.write(bytes);
+                } catch (e) {
+                    that.emit('debug', "DEBUG: >>>> Error while writing to socket");
+                    reject();
+                }
             }
             if (!waitForResponse) {
                 resolve(new message_1.Message(message));
