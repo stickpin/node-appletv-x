@@ -150,7 +150,12 @@ class Connection extends typed_events_1.default {
                 let messageLength = Buffer.from(varint.encode(encrypted.length));
                 let bytes = Buffer.concat([messageLength, encrypted]);
                 try {
-                    that.socket.write(bytes);
+                    if (that.isOpen) { 
+                        that.socket.write(bytes); 
+                    } else { 
+                        reject(); 
+                        return; 
+                    }
                 } catch (e) {
                     that.emit('debug', "DEBUG: >>>> Error while writing to socket");
                     reject();
@@ -162,7 +167,12 @@ class Connection extends typed_events_1.default {
                 let messageLength = Buffer.from(varint.encode(data.length));
                 let bytes = Buffer.concat([messageLength, data]);
                 try {
-                    that.socket.write(bytes);
+                    if (that.isOpen) { 
+                        that.socket.write(bytes); 
+                    } else { 
+                        reject(); 
+                        return; 
+                    }
                 } catch (e) {
                     that.emit('debug', "DEBUG: >>>> Error while writing to socket");
                     reject();
