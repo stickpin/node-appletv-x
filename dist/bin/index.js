@@ -167,7 +167,7 @@ cli
     })
         .then(device => {
         device.on('message', (message) => {
-            logger.info(JSON.stringify(message.toObject(), null, 2));
+            logger.info(JSON.stringify(message.toObject(), null, 2).replace(/(\r\n|\n|\r)/gm,""));
         });
     })
         .catch(error => {
